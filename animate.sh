@@ -4,6 +4,7 @@
 # The created animation will have a unique name, using next free number in output directory.
 # e.g. if 7.webp exists, it will create 8.webp as output
 
+# TODO: change these to parameters passed to the script:
 INPUT_DIR=~/Pictures/src
 OUTPUT_DIR=~/Pictures/out
 SIZE="50%"
@@ -11,15 +12,11 @@ EXT="webp"
 
 # Find last numbered animated image, continue with next number:
 FILENAME=$(ls -t -1 $OUTPUT_DIR | head -1 | sed s/."${EXT}"//)
-if [ $FILENAME ]; then
-  echo "Found ${FILENAME}, removing extension"
+if [ ${FILENAME} ]; then
   FILENAME="${FILENAME%.*}"
-	true
 else
-	echo "starting from 0"
 	FILENAME="0"
 fi
-echo "last file: ${FILENAME}"
 NEW_FILENAME="$(($FILENAME + 1)).${EXT}"
 
 # For some reason, the file we want to write already exists - error.
@@ -29,10 +26,8 @@ if [ -e $NEW_FILENAME ]; then
 fi
 
 # Check that imagemagick is installed:
-if which convert >/dev/null; then
-	true
-else
-	echo "convert (=imagemagick) not found. Please install it first."
+if ! $(which convert >/dev/null); then
+	echo "convert (=imagemagick) not found or not in path. Please install it first."
 	exit 1
 fi
 

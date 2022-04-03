@@ -34,14 +34,11 @@ if [ ! -e "$TEMPD" ]; then
     >&2 echo "Failed to create temp directory"
     exit 1
 fi
-echo "Created temporary directory: ${TEMPD}"
 trap "exit 1"           HUP INT PIPE QUIT TERM
 trap 'rm -rf "$TEMPD"'  EXIT
 
 # make a copy of the input directory, to not delete source:
-if `cp "${IN_DIR}/"*.* "${TEMPD}"`; then
-  echo 'all copied'
-else
+if ! `cp "${IN_DIR}/"*.* "${TEMPD}"`; then
   echo 'Failed to copy files into temporary directory'
   exit 1
 fi
@@ -49,8 +46,8 @@ fi
 # Copy $FRAMES files at a time, call into separate script to create the animation
 while [ -n "$(ls -A ${TEMPD})" ]; do
   # Clear up animation directory, to avoid using existing files as frames:
-  rm "${ANIM_DIR}"/*
+  rm "${ANIM_DIR}"/* 2>/dev/null
   # Copy next $FRAMES files
   find "${TEMPD}" -maxdepth 1 -type f -iname '*.jpg' -print | sort | head -n $FRAMES | xargs -I _ mv _ "${ANIM_DIR}"
-  $ANIMATION_SCRIPT
+  $ANIMATION_SCRIPT || echo "${ANIMATION_SCRIPT} failed, continuing anyway"
 done
