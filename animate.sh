@@ -7,8 +7,10 @@
 # TODO: change these to parameters passed to the script:
 INPUT_DIR=~/Pictures/src
 OUTPUT_DIR=~/Pictures/out
-SIZE="50%"
+SIZE="100%"
 EXT="webp"
+QUALITY=80
+DELAY=20
 
 # Find last numbered animated image, continue with next number:
 FILENAME=$(ls -t -1 $OUTPUT_DIR | head -1 | sed s/."${EXT}"//)
@@ -36,4 +38,5 @@ for f in $INPUT_DIR/*; do
 	mv $f "$(echo ${f} | tr '[:upper:]' '[:lower:]')"
 done
 
-convert -delay 20 -resize $SIZE -dispose None -loop 0 -quality 80 "${INPUT_DIR}"/*.jpg "${OUTPUT_DIR}/${NEW_FILENAME}" && rm "${INPUT_DIR}"/*.jpg
+#  -resize $SIZE
+convert -delay $DELAY -dispose None -loop 0 -quality $QUALITY "${INPUT_DIR}"/*.jpg "${OUTPUT_DIR}/${NEW_FILENAME}" && rm "${INPUT_DIR}"/*.jpg
