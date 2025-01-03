@@ -28,8 +28,8 @@ if [ -e $NEW_FILENAME ]; then
 fi
 
 # Check that imagemagick is installed:
-if ! $(which convert >/dev/null); then
-	echo "convert (=imagemagick) not found or not in path. Please install it first."
+if ! $(which magick  >/dev/null); then
+	echo "magick is not found or not in path. Please install it first."
 	exit 1
 fi
 
@@ -39,4 +39,4 @@ for f in $INPUT_DIR/*; do
 done
 
 #  -resize $SIZE
-convert -delay $DELAY -dispose None -loop 0 -quality $QUALITY "${INPUT_DIR}"/*.jpg "${OUTPUT_DIR}/${NEW_FILENAME}" && rm "${INPUT_DIR}"/*.jpg
+magick convert -delay $DELAY -dispose None -loop 0 -quality $QUALITY "${INPUT_DIR}"/*.jpg "${OUTPUT_DIR}/${NEW_FILENAME}" && rm "${INPUT_DIR}"/*.jpg
