@@ -39,4 +39,4 @@ for f in $INPUT_DIR/*; do
 done
 
 #  -resize $SIZE
-magick convert -delay $DELAY -dispose None -loop 0 -quality $QUALITY "${INPUT_DIR}"/*.jpg "${OUTPUT_DIR}/${NEW_FILENAME}" && rm "${INPUT_DIR}"/*.jpg
+magick -delay $DELAY -dispose None -loop 0 -quality $QUALITY "${INPUT_DIR}"/*.jpg "${OUTPUT_DIR}/${NEW_FILENAME}" && rm "${INPUT_DIR}"/*.jpg
