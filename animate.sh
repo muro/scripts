@@ -12,31 +12,58 @@ EXT="webp"
 QUALITY=80
 DELAY=20
 
-# Find last numbered animated image, continue with next number:
-FILENAME=$(ls -t -1 $OUTPUT_DIR | head -1 | sed s/."${EXT}"//)
-if [ ${FILENAME} ]; then
-  FILENAME="${FILENAME%.*}"
-else
-	FILENAME="0"
-fi
-NEW_FILENAME="$(($FILENAME + 1)).${EXT}"
-
-# For some reason, the file we want to write already exists - error.
-if [ -e $NEW_FILENAME ]; then
-	echo "file ${NEW_FILENAME} already exists, this is a bug."
-	exit 1
-fi
+# Ensure output directory exists
+mkdir -p "$OUTPUT_DIR"
 
 # Check that imagemagick is installed:
-if ! $(which magick  >/dev/null); then
-	echo "magick is not found or not in path. Please install it first."
-	exit 1
+if ! $(which magick >/dev/null); then
+    echo "magick is not found or not in path. Please install it first."
+    exit 1
 fi
 
-# Lowercase all filenames:
-for f in $INPUT_DIR/*; do
-	mv $f "$(echo ${f} | tr '[:upper:]' '[:lower:]')"
+# Lowercase all filenames (important for consistency)
+# Using a loop that handles potential errors and spaces in filenames
+for f in "$INPUT_DIR"/*; do
+    # Check if it's a file before trying to rename
+    if [ -f "$f" ]; then
+        # Get directory and filename separately
+        dir=$(dirname "$f")
+        filename=$(basename "$f")
+        # Convert filename to lowercase
+        new_filename_lower=$(echo "$filename" | tr '[:upper:]' '[:lower:]')
+        # Rename only if the name changes
+        if [ "$filename" != "$new_filename_lower" ]; then
+            mv -- "$f" "$dir/$new_filename_lower"
+        fi
+    fi
 done
 
-#  -resize $SIZE
-magick -delay $DELAY -dispose None -loop 0 -quality $QUALITY "${INPUT_DIR}"/*.jpg "${OUTPUT_DIR}/${NEW_FILENAME}" && rm "${INPUT_DIR}"/*.jpg
+
+# Determine output file name:
+
+# Find the first JPEG file to determine the base name
+# Use find for better handling of filenames and ensure we only get files
+first_jpg=$(find "$INPUT_DIR" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print | sort | head -n 1)
+if [ -z "$first_jpg" ]; then
+    echo "No JPEG files found in ${INPUT_DIR}"
+    exit 1
+fi
+
+# Extract base name from the first found jpg file
+# Removes extension (.jpg or .jpeg) and trailing sequence numbers (-digits)
+base_name=$(basename "$first_jpg")
+base_name=${base_name%.*} # Remove extension (shortest match)
+base_name=$(echo "$base_name" | sed -E 's/-[0-9]+$//') # Remove trailing -digits
+
+# Find last numbered animated image, continue with next number:
+target_base_path="${OUTPUT_DIR}/${base_name}"
+output_filename="${target_base_path}.${EXT}"
+counter=1
+
+# Check if the base filename exists, and if so, find the next available number
+while [ -e "$output_filename" ]; do
+    output_filename="${target_base_path}-${counter}.${EXT}"
+    counter=$((counter + 1))
+done
+
+magick -delay $DELAY -dispose None -loop 0 -quality $QUALITY -dispose None "${INPUT_DIR}"/*.jpg "${output_filename}" && rm "${INPUT_DIR}"/*.jpg
